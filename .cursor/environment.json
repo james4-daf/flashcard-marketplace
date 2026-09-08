@@ -1,0 +1,19 @@
+{
+  "name": "Flashcard Marketplace",
+  "install": "bash scripts/cloud-install.sh",
+  "terminals": [
+    {
+      "name": "turso-db",
+      "command": "export PATH=\"$HOME/.turso:$PATH\"; turso dev --db-file .turso/dev.db --port 8080"
+    },
+    {
+      "name": "backend-api",
+      "command": "npm run dev --workspace backend"
+    },
+    {
+      "name": "frontend-web",
+      "command": "npm run dev --workspace frontend"
+    }
+  ],
+  "ports": [5173, 8787, 8080]
+}
