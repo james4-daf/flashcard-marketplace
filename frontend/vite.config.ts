@@ -5,7 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: '127.0.0.1',
+    // Bind 0.0.0.0 so Cursor Cloud Agent port-forwarding reaches the server.
+    host: true,
     port: 5173,
     // Allow Cursor's forwarded preview hostnames to reach the dev server.
     allowedHosts: true,
