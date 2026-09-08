@@ -1,6 +1,9 @@
 import type { DeckSummary, DeckWithCards, UpvoteResult } from './types';
 
-const API_URL: string = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8787';
+// Empty by default: requests are same-origin ("/api/...") and go through the
+// Vite dev proxy to the worker. Set VITE_API_URL to the deployed Worker URL in
+// production.
+const API_URL: string = import.meta.env.VITE_API_URL ?? '';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
