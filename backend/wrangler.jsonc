@@ -1,0 +1,16 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "flashcard-marketplace-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    // Non-secret defaults. Real Turso credentials are provided via
+    // `.dev.vars` locally and `wrangler secret put` in production.
+    "TURSO_DATABASE_URL": "http://127.0.0.1:8080",
+    "TURSO_AUTH_TOKEN": ""
+  }
+}
