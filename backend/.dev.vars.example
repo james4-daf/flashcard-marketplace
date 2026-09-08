@@ -1,0 +1,9 @@
+# Local development secrets for `wrangler dev`.
+# Copy this file to `.dev.vars` (done automatically by `npm install`).
+#
+# For local development we point at the libSQL server started by `turso dev`,
+# which requires no auth token. In production these are set with:
+#   wrangler secret put TURSO_DATABASE_URL
+#   wrangler secret put TURSO_AUTH_TOKEN
+TURSO_DATABASE_URL="http://127.0.0.1:8080"
+TURSO_AUTH_TOKEN=""

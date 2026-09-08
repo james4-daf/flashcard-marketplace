@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+frontend/dist/
+.wrangler/
+
+# Local libSQL database (served by `turso dev`)
+.turso/
+
+# Local secrets / env (never commit real Turso credentials)
+backend/.dev.vars
+**/.env
+**/.env.*
+!**/.env.example
+
+# Logs & OS
+*.log
+.DS_Store
