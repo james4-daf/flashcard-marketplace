@@ -1,0 +1,26 @@
+{
+  "name": "flashcard-marketplace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Flashcard Marketplace — Vite + Hono + Cloudflare Workers + Turso (libSQL) monorepo",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n turso,api,web -c magenta,cyan,green \"npm:dev:turso\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:turso": "turso dev --db-file .turso/dev.db --port 8080",
+    "dev:api": "npm run dev --workspace backend",
+    "dev:web": "npm run dev --workspace frontend",
+    "db:setup": "tsx scripts/db-setup.ts",
+    "db:reset": "rm -f .turso/dev.db* && npm run db:setup",
+    "typecheck": "npm run typecheck --workspace backend && npm run typecheck --workspace frontend",
+    "build": "npm run build --workspace frontend"
+  },
+  "devDependencies": {
+    "@libsql/client": "^0.18.0",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.23.0",
+    "typescript": "^5.7.0"
+  }
+}
