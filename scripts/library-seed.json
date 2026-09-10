@@ -1,0 +1,18 @@
+{
+  "owner_id": "user_demo",
+  "decks": [
+    {
+      "slug": "persist-check",
+      "title": "Persist Check",
+      "topic": "Engineering",
+      "price_cents": 0,
+      "is_public": false,
+      "cards": [
+        {
+          "front": "Will this survive auth?",
+          "back": "Yes — same user_demo row."
+        }
+      ]
+    }
+  ]
+}

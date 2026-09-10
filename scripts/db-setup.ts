@@ -9,6 +9,9 @@
  * inserted when the users table is empty.
  */
 import { createClient, type Client } from '@libsql/client';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const url = process.env.TURSO_DATABASE_URL ?? 'file:.turso/dev.db';
 const authToken = process.env.TURSO_AUTH_TOKEN || undefined;
@@ -32,6 +35,7 @@ async function migrate(db: Client): Promise<void> {
         topic TEXT NOT NULL,
         price_cents INTEGER DEFAULT 0,
         is_public INTEGER DEFAULT 1,
+        slug TEXT,
         FOREIGN KEY(creator_id) REFERENCES users(id)
       )`,
       // Extension beyond the reference schema: card content is required to
@@ -61,6 +65,16 @@ async function migrate(db: Client): Promise<void> {
       )`,
     ],
     'write',
+  );
+
+  const info = await db.execute('PRAGMA table_info(decks)');
+  const hasSlug = info.rows.some((row) => String(row.name) === 'slug');
+  if (!hasSlug) {
+    await db.execute('ALTER TABLE decks ADD COLUMN slug TEXT');
+  }
+  await db.execute(
+    `CREATE UNIQUE INDEX IF NOT EXISTS idx_decks_slug
+     ON decks(slug) WHERE slug IS NOT NULL`,
   );
 }
 
@@ -184,11 +198,103 @@ async function seed(db: Client): Promise<void> {
   console.log(`Seeded ${users.length} users and ${decks.length} decks.`);
 }
 
+interface LibrarySeedCard {
+  readonly front: string;
+  readonly back: string;
+}
+
+interface LibrarySeedDeck {
+  readonly slug: string;
+  readonly title: string;
+  readonly topic: string;
+  readonly price_cents: number;
+  readonly is_public: boolean;
+  readonly cards: readonly LibrarySeedCard[];
+}
+
+interface LibrarySeed {
+  readonly owner_id: string;
+  readonly decks: readonly LibrarySeedDeck[];
+}
+
+async function upsertLibrarySeed(db: Client): Promise<void> {
+  const seedPath = join(dirname(fileURLToPath(import.meta.url)), 'library-seed.json');
+  if (!existsSync(seedPath)) return;
+  const seed = JSON.parse(readFileSync(seedPath, 'utf8')) as LibrarySeed;
+  if (!Array.isArray(seed.decks) || seed.decks.length === 0) return;
+
+  const owner = await db.execute({
+    sql: 'SELECT id FROM users WHERE id = ?',
+    args: [seed.owner_id],
+  });
+  if (owner.rows.length === 0) {
+    throw new Error(
+      `library-seed owner ${seed.owner_id} is missing — run seed first`,
+    );
+  }
+
+  for (const deck of seed.decks) {
+    const found = await db.execute({
+      sql: 'SELECT id FROM decks WHERE slug = ?',
+      args: [deck.slug],
+    });
+    const existing = found.rows[0];
+    let deckId: number;
+    if (existing !== undefined) {
+      deckId = Number(existing.id);
+      await db.execute({
+        sql: `UPDATE decks
+              SET title = ?, topic = ?, price_cents = ?, is_public = ?, creator_id = ?
+              WHERE id = ?`,
+        args: [
+          deck.title,
+          deck.topic,
+          deck.price_cents,
+          deck.is_public ? 1 : 0,
+          seed.owner_id,
+          deckId,
+        ],
+      });
+      await db.execute({
+        sql: 'DELETE FROM cards WHERE deck_id = ?',
+        args: [deckId],
+      });
+    } else {
+      const inserted = await db.execute({
+        sql: `INSERT INTO decks (creator_id, title, topic, price_cents, is_public, slug)
+              VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [
+          seed.owner_id,
+          deck.title,
+          deck.topic,
+          deck.price_cents,
+          deck.is_public ? 1 : 0,
+          deck.slug,
+        ],
+      });
+      deckId = Number(inserted.lastInsertRowid);
+    }
+    if (deck.cards.length > 0) {
+      await db.batch(
+        deck.cards.map((card) => ({
+          sql: 'INSERT INTO cards (deck_id, front, back) VALUES (?, ?, ?)',
+          args: [deckId, card.front, card.back],
+        })),
+        'write',
+      );
+    }
+  }
+  console.log(
+    `Upserted ${seed.decks.length} library deck(s) for ${seed.owner_id}.`,
+  );
+}
+
 async function main(): Promise<void> {
   const db = createClient({ url, authToken });
   console.log(`Setting up database at ${url}`);
   await migrate(db);
   await seed(db);
+  await upsertLibrarySeed(db);
   db.close();
   console.log('Database setup complete.');
 }

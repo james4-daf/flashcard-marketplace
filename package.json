@@ -7,12 +7,16 @@
     "backend",
     "frontend"
   ],
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "dev": "concurrently -n turso,api,web -c magenta,cyan,green \"npm:dev:turso\" \"npm:dev:api\" \"npm:dev:web\"",
-    "dev:turso": "turso dev --db-file .turso/dev.db --port 8080",
+    "dev": "bash scripts/dev.sh",
+    "dev:turso": "PATH=\"$HOME/.turso:$PATH\" turso dev --db-file .turso/dev.db --port 8080",
     "dev:api": "npm run dev --workspace backend",
     "dev:web": "npm run dev --workspace frontend",
     "db:setup": "tsx scripts/db-setup.ts",
+    "db:dump-library": "tsx scripts/dump-library.ts",
     "db:reset": "rm -f .turso/dev.db* && npm run db:setup",
     "typecheck": "npm run typecheck --workspace backend && npm run typecheck --workspace frontend",
     "build": "npm run build --workspace frontend"

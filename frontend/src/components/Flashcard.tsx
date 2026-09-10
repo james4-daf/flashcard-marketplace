@@ -1,48 +1,76 @@
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { Card } from '../types';
 
 interface FlashcardProps {
   readonly card: Card;
+  readonly flipped: boolean;
+  readonly index: number;
+  readonly total: number;
+  readonly onFlip: () => void;
 }
 
 /**
- * A single interactive flashcard. Clicking (or pressing Enter/Space) flips the
- * card in 3D to reveal the answer.
+ * A single interactive flashcard. Clicking (or Space, handled by the study
+ * stage) flips the card in 3D to reveal the answer.
  */
-export function Flashcard({ card }: FlashcardProps): ReactNode {
-  const [flipped, setFlipped] = useState(false);
+export function Flashcard({
+  card,
+  flipped,
+  index,
+  total,
+  onFlip,
+}: FlashcardProps): ReactNode {
+  const label = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
 
   return (
     <div
-      className="card-scene h-72 w-full cursor-pointer select-none"
+      className="card-scene h-[360px] w-full cursor-pointer select-none"
       role="button"
       tabIndex={0}
       aria-label={flipped ? 'Show question' : 'Reveal answer'}
-      onClick={() => setFlipped((v) => !v)}
+      onClick={onFlip}
       onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+        if (e.key === 'Enter') {
           e.preventDefault();
-          setFlipped((v) => !v);
+          onFlip();
         }
       }}
     >
       <div className={`card-inner ${flipped ? 'is-flipped' : ''}`}>
-        <div className="card-face rounded-2xl border border-white/10 bg-gradient-to-br from-slate-800 to-slate-900 p-8 shadow-xl">
-          <div className="text-center">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-indigo-400">
-              Question
-            </p>
-            <p className="text-2xl font-semibold text-slate-100">{card.front}</p>
-            <p className="mt-6 text-xs text-slate-500">Click to flip</p>
+        <div className="card-face rounded-lg border border-slate-200 bg-white p-1">
+          <div className="flex h-full flex-col rounded-md border border-slate-200 bg-white px-6 py-4">
+            <div className="flex items-center justify-between font-mono text-[11px] text-slate-500">
+              <span className="font-medium tracking-wide">{label}</span>
+              <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5">
+                [Space] to flip
+              </span>
+            </div>
+            <div className="flex flex-1 flex-col items-center justify-center text-center">
+              <p className="mb-3 font-mono text-[11px] font-semibold tracking-[0.08em] text-primary uppercase">
+                Prompt
+              </p>
+              <p className="max-w-lg text-2xl font-semibold tracking-tight text-slate-900">
+                {card.front}
+              </p>
+            </div>
           </div>
         </div>
-        <div className="card-face card-face--back rounded-2xl border border-indigo-400/30 bg-gradient-to-br from-indigo-600 to-fuchsia-600 p-8 shadow-xl">
-          <div className="text-center">
-            <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-indigo-100">
-              Answer
-            </p>
-            <p className="text-2xl font-semibold text-white">{card.back}</p>
-            <p className="mt-6 text-xs text-indigo-100/70">Click to flip back</p>
+        <div className="card-face card-face--back rounded-lg border border-slate-200 bg-white p-1">
+          <div className="flex h-full flex-col rounded-md border border-indigo-100 bg-indigo-50/40 px-6 py-4">
+            <div className="flex items-center justify-between font-mono text-[11px] text-slate-500">
+              <span className="font-medium tracking-wide">{label}</span>
+              <span className="rounded border border-slate-200 bg-white px-1.5 py-0.5">
+                [Space] to flip
+              </span>
+            </div>
+            <div className="flex flex-1 flex-col items-center justify-center text-center">
+              <p className="mb-3 font-mono text-[11px] font-semibold tracking-[0.08em] text-primary uppercase">
+                Recall
+              </p>
+              <p className="max-w-lg text-2xl font-semibold tracking-tight text-slate-900">
+                {card.back}
+              </p>
+            </div>
           </div>
         </div>
       </div>

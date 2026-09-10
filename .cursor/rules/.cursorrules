@@ -1,0 +1,45 @@
+Please read and memorize our strict architectural blueprint before writing any code. We have explicitly chosen this stack to optimize for infinite horizontal scaling and near-zero server baseline costs.
+
+---
+
+## 🏗️ ARCHITECTURE OVERVIEW: "THE MICRO-BUDGET EDGE STACK"
+
+1. MONOREPO MANAGEMENT
+
+- Everything lives in a single repository on my device.
+- `/frontend` contains a completely decoupled, static single-page app (SPA).
+- `/backend` contains a globally distributed serverless API.
+
+2. FRONTEND ARCHITECTURE: Vite (React/TypeScript)
+
+- Hosting Target: Cloudflare Pages (Pure static file serving via a global CDN).
+- Infrastructure Rule: ZERO server-side rendering (SSR) and zero backend execution on the frontend layer. Bandwidth cost must remain exactly $0.
+- State & Routing: Client-side routing. All data must be fetched asynchronously via standard HTTP fetch requests to our separate API.
+
+3. BACKEND ARCHITECTURE: Hono on Cloudflare Workers
+
+- Framework Choice: Hono. We are using Hono because it uses an Express-like syntax but is explicitly compiled for V8 Isolates instead of heavy Node.js instances.
+- Infrastructure Rule: The backend consists of lightweight, ephemeral serverless functions. There is NO persistent server process running 24/7.
+- Performance Rule: Avoid heavy node libraries. Code must maintain zero-cold-start performance profiles (sub-5 millisecond execution startup).
+
+4. MANAGED DATABASE PARADIGM: Turso (Distributed SQLite)
+
+- The Database: Managed SQLite hosted entirely on Turso.
+- Why Not Postgres/MySQL?: Serverless architecture kills traditional relational databases via connection pool exhaustion when thousands of users hit endpoints at once.
+- Scale Rule: SQLite communicates via fast, stateless HTTP/WebSocket transport layers using the '@libsql/client'. It has zero connection limits, allowing infinite concurrent functions to query rows simultaneously for pennies.
+- Security & Backups: Handled automatically by Turso's managed platform cloud layers.
+
+5. ECONOMIC LAYER: Stripe Connect Express & Wallets
+
+- To bypass the devastating 30¢ microtransaction fees on $2 flashcard items, we operate an internal user wallet balance system.
+- Payouts, card onboarding, and KYC are outsourced securely to Stripe Connect Express.
+
+---
+
+## 🚨 STRICT IMPLEMENTATION DIRECTIVES FOR THE AGENT
+
+- ALWAYS write strict, clean, explicit TypeScript types. Never use 'any'.
+- NEVER attempt to pull in Next.js, Vercel adapters, Prisma pools, or Docker layers.
+- KEEP files modular. Separated routes, separate database initialization middleware, and reusable frontend hooks.
+
+Confirm that you completely understand this architectural blueprint, the performance motivations behind it, and our file tree before modifying or writing code.

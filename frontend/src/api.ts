@@ -1,9 +1,13 @@
-import type { DeckSummary, DeckWithCards, UpvoteResult } from './types';
+import type {
+  DeckDraft,
+  DeckSummary,
+  DeckWithCards,
+  UpvoteResult,
+} from './types';
 
-// Empty by default: requests are same-origin ("/api/...") and go through the
-// Vite dev proxy to the worker. Set VITE_API_URL to the deployed Worker URL in
-// production.
-const API_URL: string = import.meta.env.VITE_API_URL ?? '';
+const API_URL: string = (
+  import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8787'
+).replace(/\/$/, '');
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
@@ -45,4 +49,37 @@ export async function toggleUpvote(
     method: 'POST',
     body: JSON.stringify({ user_id: userId }),
   });
+}
+
+export async function fetchLibrary(
+  userId: string,
+): Promise<readonly DeckWithCards[]> {
+  const query = new URLSearchParams({ user_id: userId });
+  const data = await request<{ decks: DeckWithCards[] }>(
+    `/api/library?${query}`,
+  );
+  return data.decks;
+}
+
+export async function createDeck(
+  userId: string,
+  draft: DeckDraft,
+): Promise<DeckSummary> {
+  const data = await request<{ deck: DeckSummary }>('/api/decks', {
+    method: 'POST',
+    body: JSON.stringify({ creator_id: userId, ...draft }),
+  });
+  return data.deck;
+}
+
+export async function updateDeck(
+  deckId: number,
+  userId: string,
+  draft: DeckDraft,
+): Promise<DeckSummary> {
+  const data = await request<{ deck: DeckSummary }>(`/api/decks/${deckId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ user_id: userId, ...draft }),
+  });
+  return data.deck;
 }

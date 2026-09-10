@@ -31,3 +31,16 @@ export interface UpvoteResult {
   readonly upvoted: boolean;
   readonly upvote_count: number;
 }
+
+export interface CardInput {
+  readonly front: string;
+  readonly back: string;
+}
+
+export interface DeckDraft {
+  readonly title: string;
+  readonly topic: string;
+  readonly price_cents: number;
+  readonly is_public: boolean;
+  readonly cards: readonly CardInput[];
+}
